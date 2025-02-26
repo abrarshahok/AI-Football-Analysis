@@ -1,6 +1,8 @@
 import pickle
 import supervision as sv
 from ultralytics import YOLO
+from src.utils import BBoxUtils
+import cv2
 
 class Tracker:
     def __init__(self, model_path):
@@ -9,6 +11,9 @@ class Tracker:
 
         # initialize tracker
         self.tracker = sv.ByteTrack()
+        
+        # Initialize BBoxUtils
+        self.bbox_utils = BBoxUtils()
     
     def detect_frames(self, frames):
         # define batch size
@@ -51,7 +56,7 @@ class Tracker:
             # inverse names like (player:2, referee:3)
             class_names_inverse = {v:k for k, v in class_names.items()}
 
-            # now get detections from supervision so we can get tracks using tracker
+            # convert YOLO detections to supervision format so tracker (ByteTrack) can use it
             sv_detections = sv.Detections.from_ultralytics(detection)
 
             # convert 'goalkeeper' class_id to 'player' class_id in sv_detections
@@ -101,3 +106,41 @@ class Tracker:
                 pickle.dump(tracks, f)
         
         return tracks
+
+    def draw_annotations(self, video_frames, tracks):
+        # initialize output video frames to store frames after assigning them ellipse bounding box
+        output_video_frames = []
+
+        # iterate through video frames
+        for frame_num, frame in enumerate(video_frames):
+            # make copy to not change original frame
+            frame = frame.copy()
+
+            # get players, referees, and ball info stored in tracks
+            players_dict = tracks['players'][frame_num]
+            referees_dict = tracks['referees'][frame_num]
+            ball_dict = tracks['ball'][frame_num]
+
+            # change rectangle bounding box to ellipse for all tracks in frame for players
+            for track_id, player in players_dict.items():
+                bbox = player['bbox']
+                color = (0, 0, 255)
+                frame = self.bbox_utils.draw_custom_bbox(frame, bbox, color, track_id)
+            
+            # change rectangle bounding box to ellipse for all tracks in frame for referees
+            for _, referee in referees_dict.items():
+                bbox = referee['bbox']
+                color = (0, 255, 255)
+                frame = self.bbox_utils.draw_custom_bbox(frame, bbox, color)
+            
+            # change rectangle bounding box to filled triangel for all tracks in frame for ball
+            for _, ball in ball_dict.items():
+                bbox = ball['bbox']
+                color = (0, 255, 0)
+                frame = self.bbox_utils.draw_triangle(frame, bbox, color)
+            
+
+            # append new frame to output video frames
+            output_video_frames.append(frame)
+        
+        return output_video_frames

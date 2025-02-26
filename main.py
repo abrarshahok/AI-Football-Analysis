@@ -21,7 +21,11 @@ def main():
                               read_from_stub=True,
                               stub_path=stub_path)
 
-    print(tracks)
+    # draw output
+    ## draw object tracks
+    output_video_frames = tracker.draw_annotations(video_frames, tracks)
+
+    vu.save_video(output_video_frames, output_video_path)
 
 if __name__ == '__main__':
     main()

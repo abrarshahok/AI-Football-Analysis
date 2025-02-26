@@ -32,18 +32,18 @@ class VideoUtils:
 
         return frames
 
-    def save_video(self, ouput_video_frames, output_video_path):
+    def save_video(self, output_video_frames, output_video_path):
         # define output format of video
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
         # define frame size
-        (y, x, c) = ouput_video_frames[0].shape
+        (y, x, c) = output_video_frames[0].shape
 
         # define VideoWriter for saving frames as video at given path
         output = cv2.VideoWriter(output_video_path, fourcc, 24, (x, y))
 
         # saving frames as video 
-        for frame in ouput_video_frames:
+        for frame in output_video_frames:
             output.write(frame)
         
         # close video writer
