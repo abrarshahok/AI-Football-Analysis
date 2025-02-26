@@ -2,7 +2,6 @@ import pickle
 import supervision as sv
 from ultralytics import YOLO
 from src.utils import BBoxUtils
-import cv2
 
 class Tracker:
     def __init__(self, model_path):
@@ -133,7 +132,7 @@ class Tracker:
                 color = (0, 255, 255)
                 frame = self.bbox_utils.draw_custom_bbox(frame, bbox, color)
             
-            # change rectangle bounding box to filled triangel for all tracks in frame for ball
+            # change rectangle bounding box to filled triangle for all tracks in frame for ball
             for _, ball in ball_dict.items():
                 bbox = ball['bbox']
                 color = (0, 255, 0)
