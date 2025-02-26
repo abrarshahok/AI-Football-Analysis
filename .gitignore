@@ -3,4 +3,5 @@ output_videos/output.mp4
 training/football-players-detection-1/football-players-detection-1
 models/best.pt
 runs/detect
+stubs/
 yolov8x.pt
