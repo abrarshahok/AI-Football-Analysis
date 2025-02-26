@@ -34,7 +34,7 @@ class Tracker:
         # read from stub then return saved tracks
         if read_from_stub and stub_path is not None:
             with open(stub_path, 'rb') as f:
-                tracks = pickle.load(stub_path, f)
+                tracks = pickle.load(f)
             return tracks
 
         # detection frames using YOLO model
@@ -61,7 +61,7 @@ class Tracker:
                     sv_detections.class_id[object_idx] = class_names_inverse['player']
 
             # track objects
-            detection_with_tracks = self.tracker.update_with_detections(sv_detections, frame_num)
+            detection_with_tracks = self.tracker.update_with_detections(sv_detections)
 
             # appending dictionary for each object
             # key will be track id which we get from tracker and value will be bounding box
@@ -84,9 +84,9 @@ class Tracker:
                     tracks['referees'][frame_num][tracker_id] = {'bbox':bbox}
             
             # we are taking ball without tracks
-            for frame_detecion in sv_detections:
+            for frame_detection in sv_detections:
                 bbox = frame_detection[0].tolist()
-                class_id = frame_detecion[3]
+                class_id = frame_detection[3]
 
                 # just setting 1 as track id for ball
                 tracker_id = 1
