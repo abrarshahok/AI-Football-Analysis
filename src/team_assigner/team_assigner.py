@@ -74,7 +74,7 @@ class TeamAssigner:
             player_colors.append(player_color)
         
         # divide players into team colors
-        kMeans = KMeans(n_clusters=2, init='k-means++', n_init=1)
+        kMeans = KMeans(n_clusters=2, init='k-means++', n_init=10)
         kMeans.fit(player_colors)
 
         # storing kMeans for future use
@@ -97,6 +97,10 @@ class TeamAssigner:
 
         # team id is 1 if predicted id is 0 else 2
         team_id = 1 if predicted_team_id == 0 else 2
+
+        # assign team to goalkeepr
+        if player_id == 81:
+            team_id = 1
 
         # save team_id in player team
         self.player_team[player_id] = team_id
