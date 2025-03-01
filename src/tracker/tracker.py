@@ -1,4 +1,5 @@
 import pickle
+import pandas as pd
 import supervision as sv
 from ultralytics import YOLO
 from src.utils import BBoxUtils
@@ -106,7 +107,22 @@ class Tracker:
         
         return tracks
 
-    def draw_annotations(self, video_frames, tracks):
+    def interpolate_ball_position(self, ball_positions):
+        # get bounding box of track 1 in ball positions and convert to list
+        ball_positions = [position.get(1, {}).get('bbox', []) for position in ball_positions]
+
+        # convert ball positions to pandas dataframe
+        df_ball_positions = pd.DataFrame(ball_positions, columns=['x1', 'y1', 'x2', 'y2'])
+
+        # interpolate missing values and back fill in case if values are missing from starting frame (e.g. frame 1)
+        df_ball_positions = df_ball_positions.interpolate().bfill()
+
+        # convert ball positions to same format and return
+        ball_positions = [{1: {'bbox': position}} for position in df_ball_positions.to_numpy().tolist()]
+        
+        return ball_positions
+
+    def draw_annotations(self, video_frames, tracks, team_ball_control):
         # initialize output video frames to store frames after assigning them ellipse bounding box
         output_video_frames = []
 
@@ -125,6 +141,8 @@ class Tracker:
                 bbox = player['bbox']
                 color = player.get('team_color', (0, 0, 255))
                 frame = self.bbox_utils.draw_custom_bbox(frame, bbox, color, track_id)
+                if player.get('has_ball', False):
+                    frame = self.bbox_utils.draw_triangle(frame, bbox, (0, 0, 255))
             
             # change rectangle bounding box to ellipse for all tracks in frame for referees
             for _, referee in referees_dict.items():
@@ -138,6 +156,8 @@ class Tracker:
                 color = (0, 255, 0)
                 frame = self.bbox_utils.draw_triangle(frame, bbox, color)
             
+            # draw rectangle and show team controling the ball
+            frame = self.bbox_utils.draw_team_ball_control(frame, frame_num, team_ball_control)
 
             # append new frame to output video frames
             output_video_frames.append(frame)

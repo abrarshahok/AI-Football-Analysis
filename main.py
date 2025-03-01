@@ -1,7 +1,9 @@
 # import cv2
+import numpy as np
 from src.utils import VideoUtils
 from src.tracker import Tracker
 from src.team_assigner import TeamAssigner
+from src.ball_assigner import BallAssigner
 
 def main():
     # initialize video utils
@@ -22,6 +24,9 @@ def main():
     tracks =  tracker.get_object_tracks(video_frames, 
                               read_from_stub=True,
                               stub_path=stub_path)
+    
+    # interpolate ball positions
+    tracks['ball'] = tracker.interpolate_ball_position(tracks['ball'])
 
     #crop player image
     # for track_id, player in tracks['players'][0].items():
@@ -50,11 +55,29 @@ def main():
             tracks['players'][frame_num][player_id]['team_color'] = team_assigner.team_colors[team]
 
 
+    # assign ball to player
+    ball_assigner = BallAssigner()
+    team_ball_control = []
+    for frame_num, player_track in enumerate(tracks['players']):
+        # 1 is track id for ball
+        ball_bbox = tracks['ball'][frame_num][1]['bbox']
+        assigned_player = ball_assigner.assign_ball_to_player(player_track, ball_bbox) 
+
+        if assigned_player != -1:
+            tracks['players'][frame_num][assigned_player]['has_ball'] = True
+            # assign ball control to current team
+            team_ball_control.append(tracks['players'][frame_num][assigned_player]['team'])
+        else:
+            # assign ball control to last team which was controlling ball
+            team_ball_control.append(team_ball_control[-1])
+            
+    team_ball_control = np.array(team_ball_control)
 
     # draw output
     ## draw object tracks
-    output_video_frames = tracker.draw_annotations(video_frames, tracks)
+    output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
 
+    # save video
     vu.save_video(output_video_frames, output_video_path)
 
 if __name__ == '__main__':
