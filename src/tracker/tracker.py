@@ -81,11 +81,11 @@ class Tracker:
 
                 # assign 'player' bounding box to corresponding tracker_id in current frame
                 if class_id == class_names_inverse['player']:
-                    tracks['players'][frame_num][tracker_id] = {'bbox':bbox}
+                    tracks['players'][frame_num][tracker_id] = {'bbox': bbox}
                 
                 # assign 'referee' bounding box to corresponding tracker_id in current frame
                 if class_id == class_names_inverse['referee']:
-                    tracks['referees'][frame_num][tracker_id] = {'bbox':bbox}
+                    tracks['referees'][frame_num][tracker_id] = {'bbox': bbox}
             
             # we are taking ball without tracks
             for frame_detection in sv_detections:
@@ -123,7 +123,7 @@ class Tracker:
             # change rectangle bounding box to ellipse for all tracks in frame for players
             for track_id, player in players_dict.items():
                 bbox = player['bbox']
-                color = (0, 0, 255)
+                color = player.get('team_color', (0, 0, 255))
                 frame = self.bbox_utils.draw_custom_bbox(frame, bbox, color, track_id)
             
             # change rectangle bounding box to ellipse for all tracks in frame for referees
