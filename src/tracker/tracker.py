@@ -108,7 +108,7 @@ class Tracker:
         return tracks
 
     def interpolate_ball_position(self, ball_positions):
-        # get bounding box of track 1 in ball positions and convert to list
+        # get bounding boxes of ball and convert to list
         ball_positions = [position.get(1, {}).get('bbox', []) for position in ball_positions]
 
         # convert ball positions to pandas dataframe
