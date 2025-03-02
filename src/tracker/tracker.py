@@ -6,13 +6,8 @@ from src.utils import BBoxUtils
 
 class Tracker:
     def __init__(self, model_path):
-        # initialize model
         self.model = YOLO(model_path)
-
-        # initialize tracker
         self.tracker = sv.ByteTrack()
-        
-        # Initialize BBoxUtils
         self.bbox_utils = BBoxUtils()
     
     def detect_frames(self, frames):
@@ -37,7 +32,7 @@ class Tracker:
 
     def get_object_tracks(self, frames, read_from_stub=False, stub_path=None):
         # read from stub then return saved tracks
-        if read_from_stub and stub_path is not None:
+        if read_from_stub and stub_path:
             with open(stub_path, 'rb') as f:
                 tracks = pickle.load(f)
             return tracks
@@ -101,7 +96,7 @@ class Tracker:
                     tracks['ball'][frame_num][tracker_id] = {'bbox': bbox}
         
         # save tracks if stub_path is provided
-        if stub_path is not None: 
+        if stub_path: 
             with open(stub_path, 'wb') as f:
                 pickle.dump(tracks, f)
         
