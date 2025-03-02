@@ -27,8 +27,6 @@ class VideoUtils:
         
         # close video
         capture.release()
-        
-        print(f'Video read successfully with {len(frames)} frames.')
 
         return frames
 
@@ -48,5 +46,3 @@ class VideoUtils:
         
         # close video writer
         output.release()
-
-        print(f'Video saved at {output_video_path}')
