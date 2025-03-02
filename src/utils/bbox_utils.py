@@ -23,6 +23,16 @@ class BBoxUtils:
 
         return int(w)
     
+    def get_foot_position(self, bbox):
+        # get bbox co-ordinates
+        x1, y1, x2, y2 = bbox
+
+        # calc x and y and convert to int
+        x = int((x1 + x2)/2)
+        y = int(y2)
+
+        return x, y
+    
     def measure_distance(self, point1, point2):
         # get x and y cordinates from both points
         x1, y1 = point1
@@ -34,6 +44,12 @@ class BBoxUtils:
         total_distance = (distx + disty)**0.5
 
         return total_distance
+
+    def measure_xy_distance(self, point1, point2):
+        # calculate x and y distance
+        dist_x = point1[0] - point2[0]
+        dist_y = point1[1] - point2[1]
+        return dist_x, dist_y
     
     def draw_ellipse(self, frame, x_center, y2, width, color):
         # Calculate axes of ellipse

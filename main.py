@@ -4,81 +4,96 @@ from src.utils import VideoUtils
 from src.tracker import Tracker
 from src.team_assigner import TeamAssigner
 from src.ball_assigner import BallAssigner
+from src.camera_movement_estimator import CameraMovementEstimator
+
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 def main():
-    # initialize video utils
+    print("Initializing video utilities...\n")
     vu = VideoUtils()
 
-    # initialize tracker
+    print("Initializing tracker with model...\n")
     tracker = Tracker('./models/best.pt')
 
-    # input and output paths
+    # Input and output paths
     input_video_path = './input_videos/input.mp4'
     output_video_path = './output_videos/output.mp4'
-    stub_path = './stubs/track_stubs.pkl'
+    tracks_stub_path = './stubs/track_stubs.pkl'
+    camera_movement_stub_path = './stubs/camera_movement_stubs.pkl'
 
-    # get input video frames
-    video_frames =  vu.read_video(input_video_path)
+    print(f"Reading video frames from: {input_video_path}")
+    video_frames = vu.read_video(input_video_path)
+    print(f"Total frames loaded: {len(video_frames)}\n")
 
-    # get tracks of video frames
-    tracks =  tracker.get_object_tracks(video_frames, 
-                              read_from_stub=True,
-                              stub_path=stub_path)
-    
-    # interpolate ball positions
+    print("Getting object tracks...")
+    tracks = tracker.get_object_tracks(video_frames, 
+                                       read_from_stub=True,
+                                       stub_path=tracks_stub_path)
+    print("Object tracking complete.\n")
+
+    print("Adding position to tracks...")
+    tracker.add_position_to_tracks(tracks)
+    print("Adding position to tracks complete.\n")
+
+    print("Estimating camera movements...")
+    camera_movement_estimator = CameraMovementEstimator(video_frames[0])
+    camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames, 
+                                                                              read_from_stub=True,
+                                                                              stub_path=camera_movement_stub_path)
+    print("Camera movement estimation complete.\n")
+
+    print("Adjusting track positions...")
+    camera_movement_estimator.adjust_track_positions(tracks, camera_movement_per_frame)
+    print("Adjusting track positions complete.\n")
+
+    print("Interpolating ball positions...")
     tracks['ball'] = tracker.interpolate_ball_position(tracks['ball'])
+    print("Ball position interpolation complete.\n")
 
-    #crop player image
-    # for track_id, player in tracks['players'][0].items():
-    #     x1, y1, x2, y2 = player['bbox']
-    #     frame = video_frames[0]
-        
-    #     # get cropped image
-    #     cropped_image = frame[int(y1):int(y2), int(x1):int(x2)]
-
-    #     # save cropped image
-    #     cv2.imwrite(f'./output_images/cropped_image.jpg', cropped_image)
-
-    #     break
-
-    # assign player teams only in first frame
+    print("Initializing team assigner...")
     team_assigner = TeamAssigner()
-    team_assigner.assign_team_color(video_frames[0], 
-                                    tracks['players'][0])
+    print("Assigning team colors for the first frame...")
+    team_assigner.assign_team_color(video_frames[0], tracks['players'][0])
+    print("Team color assignment complete.\n")
 
+    print("Assigning teams to players across frames...")
     for frame_num, player_track in enumerate(tracks['players']):
         for player_id, track in player_track.items():
-            team = team_assigner.get_player_team(video_frames[frame_num],
-                                                 track['bbox'],
-                                                 player_id)
+            team = team_assigner.get_player_team(video_frames[frame_num], track['bbox'], player_id)
             tracks['players'][frame_num][player_id]['team'] = team
             tracks['players'][frame_num][player_id]['team_color'] = team_assigner.team_colors[team]
+    print("Player team assignment complete.\n")
 
-
-    # assign ball to player
+    print("Initializing ball assigner...")
     ball_assigner = BallAssigner()
     team_ball_control = []
+
+    print("Assigning ball possession...")
     for frame_num, player_track in enumerate(tracks['players']):
-        # 1 is track id for ball
-        ball_bbox = tracks['ball'][frame_num][1]['bbox']
-        assigned_player = ball_assigner.assign_ball_to_player(player_track, ball_bbox) 
+        ball_bbox = tracks['ball'][frame_num][1]['bbox']  # track ID 1 for ball
+        assigned_player = ball_assigner.assign_ball_to_player(player_track, ball_bbox)
 
         if assigned_player != -1:
             tracks['players'][frame_num][assigned_player]['has_ball'] = True
-            # assign ball control to current team
             team_ball_control.append(tracks['players'][frame_num][assigned_player]['team'])
         else:
-            # assign ball control to last team which was controlling ball
-            team_ball_control.append(team_ball_control[-1])
-            
+            team_ball_control.append(team_ball_control[-1] if team_ball_control else -1)  # handle initial case
+    print("Ball possession assignment complete.\n")
+
     team_ball_control = np.array(team_ball_control)
 
-    # draw output
-    ## draw object tracks
+    print("Drawing object tracks on frames...")
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
+    print("Object tracks drawn.\n")
 
-    # save video
+    print("Drawing camera movement indicators...")
+    output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
+    print("Camera movement drawing complete.\n")
+
+    print(f"Saving output video to: {output_video_path}")
     vu.save_video(output_video_frames, output_video_path)
+    print("Video saved successfully.\n")
 
 if __name__ == '__main__':
     main()

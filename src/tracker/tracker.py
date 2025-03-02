@@ -9,7 +9,7 @@ class Tracker:
         self.model = YOLO(model_path)
         self.tracker = sv.ByteTrack()
         self.bbox_utils = BBoxUtils()
-    
+
     def detect_frames(self, frames):
         # define batch size
         batch_size = 20
@@ -101,6 +101,21 @@ class Tracker:
                 pickle.dump(tracks, f)
         
         return tracks
+
+    def add_position_to_tracks(self, tracks):
+        for object, object_tracks in tracks.items():
+            for frame_num, track in enumerate(object_tracks):
+                for track_id, track_info in track.items():
+                    # extract bounding box
+                    bbox = track_info['bbox']
+                    # get center position for ball, foot position for other objects
+                    if object == 'ball':
+                        position = self.bbox_utils.get_center(bbox)
+                    else:
+                        position = self.bbox_utils.get_foot_position(bbox)
+                    # assign computed position to the track
+                    tracks[object][frame_num][track_id]['position'] = position
+
 
     def interpolate_ball_position(self, ball_positions):
         # get bounding boxes of ball and convert to list
