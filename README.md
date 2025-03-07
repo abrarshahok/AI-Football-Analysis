@@ -19,6 +19,7 @@ AI Football Analysis is a computer vision system that processes football match v
 - **Python**
 - **YOLOv5** (Object Detection)
 - **ByteTrack** (Object Tracking)
+- **KMeans** (Team Clustering)
 - **OpenCV**
 - **NumPy**
 
