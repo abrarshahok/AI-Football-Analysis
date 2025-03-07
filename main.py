@@ -5,6 +5,7 @@ from src.tracker import Tracker
 from src.team_assigner import TeamAssigner
 from src.ball_assigner import BallAssigner
 from src.camera_movement_estimator import CameraMovementEstimator
+from src.view_transformer import ViewTransformer
 
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -46,6 +47,11 @@ def main():
     print("Adjusting track positions...")
     camera_movement_estimator.adjust_track_positions(tracks, camera_movement_per_frame)
     print("Adjusting track positions complete.\n")
+
+    print("Adjusting view transformations...")
+    view_transformer = ViewTransformer()
+    view_transformer.add_transformed_position_to_tracks(tracks)
+    print("Adjusting view transformations complete.\n")
 
     print("Interpolating ball positions...")
     tracks['ball'] = tracker.interpolate_ball_position(tracks['ball'])
