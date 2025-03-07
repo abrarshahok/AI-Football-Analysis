@@ -10,9 +10,8 @@ AI Football Analysis is a computer vision system that processes football match v
 - **Player Detection & Tracking**: Identifies and tracks players with team classification.
 - **Ball Detection & Possession**: Tracks ball movement with position interpolation for continuous tracking.
 - **Team Identification**: Classifies players by team using jersey color clustering.
-- **Camera Movement Compensation**: Adjusts tracking for dynamic camera footage.
-- **Real-World Position Mapping**: Transforms image coordinates to actual field positions.
-- **Speed & Distance Metrics**: Calculates and displays player movement statistics.
+- **Camera Movement Estimation**: Adjusts tracking for dynamic camera footage.
+- **Speed & Distance Estimation**: Calculates and displays player movement statistics.
 - **Annotation System**: Visualizes tracks, team assignments, and possession data.
 
 ## Technologies Used
