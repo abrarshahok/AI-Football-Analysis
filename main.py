@@ -6,6 +6,7 @@ from src.team_assigner import TeamAssigner
 from src.ball_assigner import BallAssigner
 from src.camera_movement_estimator import CameraMovementEstimator
 from src.view_transformer import ViewTransformer
+from src.speed_and_distance_estimator import SpeedAndDistanceEstimator
 
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -57,6 +58,11 @@ def main():
     tracks['ball'] = tracker.interpolate_ball_position(tracks['ball'])
     print("Ball position interpolation complete.\n")
 
+    print("Estimating speed and distance...")
+    speed_and_distance_estimator = SpeedAndDistanceEstimator()
+    speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
+    print("Estimating speed and distance complete.\n")
+
     print("Initializing team assigner...")
     team_assigner = TeamAssigner()
     print("Assigning team colors for the first frame...")
@@ -96,6 +102,10 @@ def main():
     print("Drawing camera movement indicators...")
     output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
     print("Camera movement drawing complete.\n")
+
+    print("Drawing speed and distance indicators...")
+    output_video_frames = speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks)
+    print("Drawing speed and distance indicators complete.\n")
 
     print(f"Saving output video to: {output_video_path}")
     vu.save_video(output_video_frames, output_video_path)
